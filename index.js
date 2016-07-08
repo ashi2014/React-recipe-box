@@ -2,11 +2,11 @@ var RecipeBox = React.createClass({
 
     getInitialState: function() {
         return {
-            recipes: [{name: "PB&J", ingredients: ["peanut butter", "jelly", "bread"], id: 0}],
+            recipes: this.getLocalStorage(), //[{name: "PB&J", ingredients: ["peanut butter", "jelly", "bread"], id: 0}],
             currentName: "",
             currentIngredients: [],
-            nextId: 1,
-            currentEdit: 0
+            currentEdit: 0,
+            editMode: false
         };
     },
     handleSubmit: function(e) {
@@ -15,14 +15,13 @@ var RecipeBox = React.createClass({
         var newRecipe;
         if (this.state.currentName !== "" && this.state.currentIngredients.length > 0) {
             if (!this.state.editMode) {
-                newRecipe = {name: this.state.currentName, ingredients: this.state.currentIngredients, id: this.state.nextId};
+                newRecipe = {name: this.state.currentName, ingredients: this.state.currentIngredients, id: this.state.recipes.length + 1};
                 newList = newList.concat([newRecipe]);
                 this.setState({
                     currentName: "",
                     currentIngredients: [],
-                    recipes: newList,
-                    nextId: this.state.nextId + 1
-                });
+                    recipes: newList
+                }, this.updateLocalStorage);
             } else {
                 newList[this.state.currentEdit].name = this.state.currentName;
                 newList[this.state.currentEdit].ingredients = this.state.currentIngredients;
@@ -31,8 +30,9 @@ var RecipeBox = React.createClass({
                     currentIngredients: [],
                     recipes: newList,
                     editMode: false
-                });
+                }, this.updateLocalStorage);
             }
+            //setTimeout(this.updateLocalStorage.bind(this), 1000);
         }
     },
     handleNameChange: function(e) {
@@ -67,13 +67,29 @@ var RecipeBox = React.createClass({
 
         this.setState({
             recipes: newList
-        });
+        }, this.updateLocalStorage);
+
+        //setTimeout(this.updateLocalStorage.bind(this), 1000);
     },
     parseIngredients: function(str) {
         return str.split(",");
     },
     stringifyIngredients: function() {
         return this.state.currentIngredients.join(",");
+    },
+    updateLocalStorage: function() {
+        if (typeof(Storage) !== undefined) {
+            localStorage._ashi2015_recipes = JSON.stringify(this.state.recipes);
+            console.log("Local storage updated: ", localStorage._ashi2015_recipes);
+        }
+    },
+    getLocalStorage: function() {
+        if (typeof(Storage) !== undefined) {
+            if (localStorage._ashi2015_recipes) {
+                return JSON.parse(localStorage._ashi2015_recipes);
+            }
+        }
+        return [];
     },
     render: function() {
         var me = this;
@@ -86,10 +102,10 @@ var RecipeBox = React.createClass({
         var modalBtnLabel = this.state.editMode ? "Update" : "Add";
         return (
             <div>
-                <div>
+                <div className="well col-sm-6 col-sm-offset-3">
                     {recipes}
                 </div>
-                <button className="btn btn-lg btn-primary" data-toggle="modal" data-target="#myModal">Add Recipe</button>
+                <button className="btn btn-lg btn-primary col-sm-2 col-sm-offset-3" data-toggle="modal" data-target="#myModal">Add Recipe</button>
                 <div className="modal" id="myModal">
                     <div className="modal-dialog">
                       <div className="modal-content">
