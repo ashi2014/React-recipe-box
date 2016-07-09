@@ -15,7 +15,7 @@ var RecipeBox = React.createClass({
         var newRecipe;
         if (this.state.currentName !== "" && this.state.currentIngredients.length > 0) {
             if (!this.state.editMode) {
-                newRecipe = {name: this.state.currentName, ingredients: this.state.currentIngredients, id: this.state.recipes.length + 1};
+                newRecipe = {name: this.state.currentName, ingredients: this.state.currentIngredients};
                 newList = newList.concat([newRecipe]);
                 this.setState({
                     currentName: "",
@@ -32,7 +32,6 @@ var RecipeBox = React.createClass({
                     editMode: false
                 }, this.updateLocalStorage);
             }
-            //setTimeout(this.updateLocalStorage.bind(this), 1000);
         }
     },
     handleNameChange: function(e) {
@@ -51,25 +50,27 @@ var RecipeBox = React.createClass({
             currentIngredients: []
         });
     },
-    handleEdit: function(recipe) {
+    handleEdit: function(index) {
 
         this.setState({
-            currentName: recipe.name,
-            currentIngredients: recipe.ingredients,
+            currentName: this.state.recipes[index].name,
+            currentIngredients: this.state.recipes[index].ingredients,
             editMode: true,
-            currentEdit: recipe.id
+            currentEdit: index
         });
     },
-    handleDelete: function(recipe) {
-        var newList = this.state.recipes.filter(function(item) {
+    handleDelete: function(index) {
+        /*var newList = this.state.recipes.filter(function(item) {
             return item.id !== recipe.id;
-        });
+        });*/
+
+        var newList = this.state.recipes;
+        newList.splice(index, 1);
 
         this.setState({
             recipes: newList
         }, this.updateLocalStorage);
 
-        //setTimeout(this.updateLocalStorage.bind(this), 1000);
     },
     parseIngredients: function(str) {
         return str.split(",");
@@ -93,16 +94,17 @@ var RecipeBox = React.createClass({
     },
     render: function() {
         var me = this;
-        var recipes = this.state.recipes.map(function(recipe) {
+        var recipes = this.state.recipes.map(function(recipe, i) {
             return (
-                <Recipe key={recipe.id} recipe={recipe} onEdit={me.handleEdit.bind(me, recipe)}
-                        onDelete={me.handleDelete.bind(me, recipe)} />
+                <Recipe key={i} index={i} recipe={recipe} onEdit={me.handleEdit.bind(me, i)}
+                        onDelete={me.handleDelete.bind(me, i)} />
             )
         });
         var modalBtnLabel = this.state.editMode ? "Update" : "Add";
         return (
             <div>
-                <div className="well col-sm-6 col-sm-offset-3">
+                <h1 className="text-center">My Recipes</h1>
+                <div className="panel-group col-sm-6 col-sm-offset-3" id="accordian">
                     {recipes}
                 </div>
                 <button className="btn btn-lg btn-primary col-sm-2 col-sm-offset-3" data-toggle="modal" data-target="#myModal">Add Recipe</button>
@@ -147,13 +149,23 @@ var Recipe = React.createClass({
             )
         });
         return (
-            <div>
-                <h1>{this.props.recipe.name}</h1>
-                <ul className="list-group">
-                    {ingredients}
-                </ul>
-                <button onClick={this.props.onEdit} className="btn btn-info" data-toggle="modal" data-target="#myModal">Edit</button>
-                <button onClick={this.props.onDelete} className="btn btn-danger">Delete</button>
+            <div className="panel panel-default">
+                <div className="panel-heading">
+                    <h1 className="panel-title">
+                        <a data-toggle="collapse" data-parent="#accordion" href={"#collapse" + this.props.index}>
+                            {this.props.recipe.name}
+                        </a>
+                    </h1>
+                </div>
+                <div id={"collapse" + this.props.index} className="panel-collapse collapse">
+                    <div className="panel-body">
+                        <ul className="list-group">
+                            {ingredients}
+                        </ul>
+                        <button onClick={this.props.onEdit} className="btn btn-info" data-toggle="modal" data-target="#myModal">Edit</button>
+                        <button onClick={this.props.onDelete} className="btn btn-danger">Delete</button>
+                    </div>
+               </div>
             </div>
         )
     }
